@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui webkit
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -15,12 +15,17 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     point.cpp \
-    track.cpp
+    track.cpp \
+    GeoUtils.cpp
 
 HEADERS  += mainwindow.h \
     point.h \
-    track.h
+    track.h \
+    GeoUtils.h
 
 FORMS    += mainwindow.ui
 
+# -----
+
 CONFIG += c++11
+QT += xml

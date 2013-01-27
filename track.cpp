@@ -1,9 +1,16 @@
 #include <QDebug>
+#include <QFile>
+#include <QStringList>
+#include <QDomDocument>
+#include <QDomElement>
 
 #include "track.h"
+#include "GeoUtils.h"
 
 namespace godwit
 {
+
+QString Track::mDateTimeFormat = "yyyy-MM-ddThh:mm:ssZ";
 
 Track::Track(std::list<Point>& points, std::string name = "", QDateTime timestamp = QDateTime::currentDateTime())
 {
@@ -11,9 +18,9 @@ Track::Track(std::list<Point>& points, std::string name = "", QDateTime timestam
     mName = name;
     mTimestamp = timestamp;
 
-    auto delta = [](Point a, Point b)
+    auto delta = [](const Point& a, const Point& b)
     {
-        return haversine(a.getLongitude(), a.getLatitude(), b.getLongitude(), b.getLatitude()) ;
+        return haversine(a.getLatitude(), a.getLongitude(), b.getLatitude(), b.getLongitude()) ;
     };
 
     mDistance = 0.0;
@@ -30,29 +37,106 @@ Track::Track(std::list<Point>& points, std::string name = "", QDateTime timestam
     }
 }
 
-constexpr double pi() { return std::atan(1.0) * 4; }
-constexpr double earth_radius() { return 6371; }
-
-double decimal2radians(double x)
+double Track::retrieveDoubleAttribute(const QDomElement& e, const QString& attr)
 {
-    return x * pi() / 180;
+    double ret = 0.0;
+    QString s = e.attribute(attr);
+
+    bool conv;
+    ret = s.toDouble(&conv);
+
+    if(!conv)
+    {
+        qDebug() << "Conversion to double failed";
+    }
+
+    return ret;
 }
 
-double haversine(double lon1, double lat1, double lon2, double lat2)
+double Track::retrieveDoubleSingleChild(const QDomElement& e, const QString& tag)
 {
-    using namespace std;
-    double dx, dy, dz;
+    double ret = 0.0;
 
-//    qDebug() << "haversine( " << lon1 << "," << lat1 << "; " << lon2 << "," << lat2 << ")" << "\n";
+    QDomNodeList nl = e.elementsByTagName(tag);
+    if(nl.length() == 1)
+    {
+        QDomElement tmp = nl.at(0).toElement();
+        if(!tmp.isNull())
+        {
+            auto x = tmp.text();
+            bool conv;
+            ret = x.toDouble(&conv);
+            if(!conv)
+            {
+                qDebug() << "Conversion to double failed";
+            }
+        }
+    }
 
-    lat1 -= lat2;
-    lat1 = decimal2radians(lat1); lon1 = decimal2radians(lon1);
-    lat2 = decimal2radians(lat2); lon2 = decimal2radians(lon2);
+    return ret;
+}
 
-    dz = sin(lon1) - sin(lon2);
-    dx = cos(lat1) * cos(lon1) - cos(lon2);
-    dy = sin(lat1) * cos(lon1);
-    return asin(sqrt(dx * dx + dy * dy + dz * dz) / 2) * 2 * earth_radius();
+QDateTime Track::retrieveQDateTimeSingleChild(const QDomElement& e, const QString& tag)
+{
+    QDateTime ret;
+
+    QDomNodeList nl = e.elementsByTagName(tag);
+    if(nl.length() == 1)
+    {
+        QDomElement tmp = nl.at(0).toElement();
+        if(!tmp.isNull())
+        {
+            QString s = tmp.text();
+            ret = QDateTime::fromString(s, mDateTimeFormat);
+            if(ret.isNull() || !ret.isValid())
+            {
+                qDebug() << "Conversion to QDateTime failed";
+            }
+        }
+    }
+
+    return ret;
+}
+
+Track Track::createTrackFromGPX(const QString& fileName)
+{
+    QFile file(fileName);
+    if(!file.open(QIODevice::ReadOnly))
+    {
+        throw (Track_creation_exception());
+    }
+
+    QDomDocument doc("gpx");
+    if(!doc.setContent(&file))
+    {
+        file.close();
+        throw (Track_creation_exception());
+    }
+
+    std::list<Point> l;
+
+    QDomElement root = doc.documentElement();
+    QDomNodeList trkpts = root.elementsByTagName("trkpt");
+    for(int i = 0; i < trkpts.length(); i++)
+    {
+        QDomElement e = trkpts.at(i).toElement();
+        if(!e.isNull())
+        {
+            double lat = retrieveDoubleAttribute(e, "lat");
+            double lon = retrieveDoubleAttribute(e, "lon");
+            double ele = retrieveDoubleSingleChild(e, "ele");
+            // TODO int hearRate =
+            QDateTime timestamp = retrieveQDateTimeSingleChild(e, "time");
+
+            Point p(lat, lon, ele, 0, timestamp);
+            l.push_back(p);
+        }
+    }
+
+    file.close();
+
+    return Track(l);
+
 }
 
 }

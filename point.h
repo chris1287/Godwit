@@ -19,7 +19,7 @@ typedef std::pair<double, double> latlon;
 class Point
 {
 public:
-    Point(double longitude, double latitude, double altitude, int heartRate, QDateTime timestamp);
+    Point(double latitude, double longitude, double altitude, int heartRate, QDateTime timestamp);
 
     bool equals(const Point& that) const;
     bool operator == (const Point& that) const;
