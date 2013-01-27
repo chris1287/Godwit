@@ -18,7 +18,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QString name = QFileDialog::getOpenFileName(this, "Open GPX File", "/home/crp/Dropbox/gpx/Bici", "GPX (*.gpx)");
+    QString name = QFileDialog::getOpenFileName(this, "Open GPX File", ".", "GPX (*.gpx)");
     if(!name.isEmpty())
     {
         using namespace godwit;
