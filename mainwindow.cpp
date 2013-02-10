@@ -3,6 +3,7 @@
 #include <future>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <QFileInfo>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -14,28 +15,35 @@ QString MainWindow::mPath = "http://tile.openstreetmap.org/%1/%2/%3.png";
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    mSettings("Godwit", "CrP")
 {
     ui->setupUi(this);
-    viewer = new MapViewer();
-    viewer->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
-    setCentralWidget(viewer);
+    mViewer = new MapViewer();
+    mViewer->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
+    setCentralWidget(mViewer);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete viewer;
+    delete mViewer;
 }
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QString name = QFileDialog::getOpenFileName(this, "Open GPX File", ".", "GPX (*.gpx)");
+    QString gpxDirectory = mSettings.value("gpxDirectory").toString();
+    gpxDirectory = gpxDirectory.isEmpty() ? "." : gpxDirectory;
+
+    QString name = QFileDialog::getOpenFileName(this, "Open GPX File", gpxDirectory, "GPX (*.gpx)");
     if(!name.isEmpty())
     {
         using namespace godwit;
 
+        QFileInfo f(name);
+        mSettings.setValue("gpxDirectory", f.absolutePath());
+
         mTrack = std::unique_ptr<Track>( FutureFactory<Track, const QString&>::create_sync(name) );
-        viewer->updateTrackPoints(*mTrack);
+        mViewer->updateTrackPoints(*mTrack);
     }
 }

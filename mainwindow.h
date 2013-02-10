@@ -7,6 +7,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <future>
+#include <QSettings>
 #include "mapviewer.h"
 
 #include "track.h"
@@ -28,9 +29,10 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    MapViewer *viewer;
+    MapViewer *mViewer;
     static QString mPath;
     std::unique_ptr<godwit::Track> mTrack;
+    QSettings mSettings;
 };
 
 #endif // MAINWINDOW_H
