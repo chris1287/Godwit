@@ -14,8 +14,8 @@ SET( CMAKE_CXX_FLAGS "-std=c++0x" )
 
 FILE( GLOB SRC_FILES "*.cpp" )
 FILE( GLOB HEADER_FILES "*.h" )
-SET( MOC_HEADERS "mainwindow.h" )
-SET( FORMS "mainwindow.ui" )
+SET( MOC_HEADERS mainwindow.h mapviewer.h )
+SET( FORMS mainwindow.ui )
 
 QT4_WRAP_CPP( MOC_FILES ${MOC_HEADERS} )
 QT4_WRAP_UI( FORM_HEADERS ${FORMS} )

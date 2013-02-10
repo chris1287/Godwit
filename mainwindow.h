@@ -7,6 +7,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <future>
+#include "mapviewer.h"
 
 #include "track.h"
 
@@ -24,22 +25,12 @@ public:
     
 private slots:
     void on_actionOpen_triggered();
-    void handleNetworkData(QNetworkReply *);
-    void on_spinBox_valueChanged(int arg1);
 
 private:
     Ui::MainWindow *ui;
-    QNetworkDiskCache *mNetworkCache;
-    QNetworkAccessManager *mNetworkAccessManager;
-    QGraphicsScene *mScene;
-    QGraphicsPixmapItem mPixmap;
+    MapViewer *viewer;
     static QString mPath;
     std::unique_ptr<godwit::Track> mTrack;
-    std::future<godwit::Track> mHandleTrack;
-
-private:
-    void updateTrack();
-    void callbackTrackCreated(std::unique_ptr<godwit::Track> ptr);
 };
 
 #endif // MAINWINDOW_H

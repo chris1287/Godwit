@@ -32,6 +32,7 @@ public:
     double getDistance() const{ return mDistance; }
     Point getStart() const{ return mPoints.front(); }
     Point getEnd() const{ return mPoints.back(); }
+    std::list<Point> getPoints() const{ return mPoints; }
 
 private:
     void init(std::list<Point>& points, std::string name, QDateTime timestamp);
