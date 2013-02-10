@@ -12,7 +12,7 @@ namespace godwit
 
 QString Track::mDateTimeFormat = "yyyy-MM-ddThh:mm:ssZ";
 
-Track::Track(std::list<Point>& points, std::string name = "", QDateTime timestamp = QDateTime::currentDateTime())
+void Track::init(std::list<Point>& points, std::string name, QDateTime timestamp)
 {
     mPoints = points;
     mName = name;
@@ -35,6 +35,14 @@ Track::Track(std::list<Point>& points, std::string name = "", QDateTime timestam
             i = j;
         }
     }
+}
+
+Track::Track()
+{}
+
+Track::Track(std::list<Point>& points, std::string name, QDateTime timestamp)
+{
+    init(points, name, timestamp);
 }
 
 double Track::retrieveDoubleAttribute(const QDomElement& e, const QString& attr)
@@ -98,7 +106,7 @@ QDateTime Track::retrieveQDateTimeSingleChild(const QDomElement& e, const QStrin
     return ret;
 }
 
-Track Track::createTrackFromGPX(const QString& fileName)
+Track::Track(const QString& fileName)
 {
     QFile file(fileName);
     if(!file.open(QIODevice::ReadOnly))
@@ -135,8 +143,7 @@ Track Track::createTrackFromGPX(const QString& fileName)
 
     file.close();
 
-    return Track(l);
-
+    init(l, "", QDateTime::currentDateTime());
 }
 
 }

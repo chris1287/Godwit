@@ -10,7 +10,6 @@ double decimal2radians(double x)
 
 double haversine(double lat1, double lon1, double lat2, double lon2)
 {
-    using namespace std;
 	double dlon = 0.0;
 	double dlat = 0.0;
 	double a = 0.0;
@@ -29,6 +28,27 @@ double haversine(double lat1, double lon1, double lat2, double lon2)
 	res = earth_radius() * c;
 
     return res;
+}
+
+int long2tilex(double lon, int zoom)
+{
+    return (int)(floor((lon + 180.0) / 360.0 * pow(2.0, zoom)));
+}
+
+int lat2tiley(double lat, int zoom)
+{
+    return (int)(floor((1.0 - log( tan(lat * pi()/180.0) + 1.0 / cos(lat * pi()/180.0)) / pi()) / 2.0 * pow(2.0, zoom)));
+}
+
+double tilex2long(int x, int zoom)
+{
+    return x / pow(2.0, zoom) * 360.0 - 180;
+}
+
+double tiley2lat(int y, int zoom)
+{
+    double n = pi() - 2.0 * pi() * y / pow(2.0, zoom);
+    return 180.0 / pi() * atan(0.5 * (exp(n) - exp(-n)));
 }
 
 }
