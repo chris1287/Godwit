@@ -47,3 +47,25 @@ void MainWindow::on_actionOpen_triggered()
         mViewer->updateTrackPoints(*mTrack);
     }
 }
+
+void MainWindow::on_actionChange_theme_triggered()
+{
+    QString themeDirectory = mSettings.value("themeDirectory").toString();
+    themeDirectory = themeDirectory.isEmpty() ? "." : themeDirectory;
+
+    QString name = QFileDialog::getOpenFileName(this, "Open Theme File", themeDirectory, "Theme (*.dgml)");
+    if(!name.isEmpty())
+    {
+        QFileInfo f(name);
+        mSettings.setValue("themeDirectory", f.absolutePath());
+
+        QString basePath("marble/data/maps/"); // TODO check if a better way to get the path is available
+        int i = 0;
+        if((i = name.lastIndexOf(basePath)) >= 0)
+        {
+            i += basePath.length();
+            name = name.remove(0, i);
+            mViewer->setMapThemeId(name);
+        }
+    }
+}
