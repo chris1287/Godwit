@@ -3,6 +3,7 @@
 #include <future>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <QFileInfo>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -14,92 +15,57 @@ QString MainWindow::mPath = "http://tile.openstreetmap.org/%1/%2/%3.png";
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    mSettings("Godwit", "CrP")
 {
     ui->setupUi(this);
-    mNetworkCache = new QNetworkDiskCache(this);
-    mNetworkCache-> setCacheDirectory("./.cache");
-
-    mNetworkAccessManager = new QNetworkAccessManager(this);
-    mNetworkAccessManager->setCache(mNetworkCache);
-
-    connect(mNetworkAccessManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(handleNetworkData(QNetworkReply*)));
-
-    mScene = new QGraphicsScene(this);
-    ui->graphicsView->setScene(mScene);
-
-    mScene->addItem(&mPixmap);
+    mViewer = new MapViewer();
+    mViewer->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
+    setCentralWidget(mViewer);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete mViewer;
 }
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QString name = QFileDialog::getOpenFileName(this, "Open GPX File", ".", "GPX (*.gpx)");
+    QString gpxDirectory = mSettings.value("gpxDirectory").toString();
+    gpxDirectory = gpxDirectory.isEmpty() ? "." : gpxDirectory;
+
+    QString name = QFileDialog::getOpenFileName(this, "Open GPX File", gpxDirectory, "GPX (*.gpx)");
     if(!name.isEmpty())
     {
         using namespace godwit;
 
-        FutureFactory<Track, const QString&>::create_async_byFuture(name);
+        QFileInfo f(name);
+        mSettings.setValue("gpxDirectory", f.absolutePath());
 
         mTrack = std::unique_ptr<Track>( FutureFactory<Track, const QString&>::create_sync(name) );
-        updateTrack();
+        mViewer->updateTrackPoints(*mTrack);
     }
 }
 
-void MainWindow::handleNetworkData(QNetworkReply *reply)
+void MainWindow::on_actionChange_theme_triggered()
 {
-    if(!reply)
+    QString themeDirectory = mSettings.value("themeDirectory").toString();
+    themeDirectory = themeDirectory.isEmpty() ? "." : themeDirectory;
+
+    QString name = QFileDialog::getOpenFileName(this, "Open Theme File", themeDirectory, "Theme (*.dgml)");
+    if(!name.isEmpty())
     {
-        qDebug() << "QNetworkReply is NULL";
-        return;
+        QFileInfo f(name);
+        mSettings.setValue("themeDirectory", f.absolutePath());
+
+        QString basePath("marble/data/maps/"); // TODO check if a better way to get the path is available
+        int i = 0;
+        if((i = name.lastIndexOf(basePath)) >= 0)
+        {
+            i += basePath.length();
+            name = name.remove(0, i);
+            mViewer->setMapThemeId(name);
+        }
     }
-
-    QUrl url = reply->url();
-    if(reply->error())
-    {
-        qDebug() << "Network reply error";
-        return;
-    }
-
-    QImage img;
-    img.load(reply, 0);
-    reply->deleteLater();
-
-    mPixmap.setPixmap( QPixmap::fromImage(img) );
-}
-
-void MainWindow::on_spinBox_valueChanged(int)
-{
-    updateTrack();
-}
-
-void MainWindow::updateTrack()
-{
-    using namespace godwit;
-
-    if(mTrack)
-    {
-        const Point start = mTrack->getStart();
-        // const Point end = mTrack.getEnd();
-
-        int zoom = ui->spinBox->value();
-        int tilex = long2tilex(start.getLongitude(), zoom);
-        int tiley = lat2tiley(start.getLatitude(), zoom);
-
-        QUrl url = QUrl(mPath.arg(zoom).arg(tilex).arg(tiley));
-        QNetworkRequest request;
-        request.setUrl(url);
-        request.setRawHeader("User-Agent", "Godwit 1.0.0");
-        mNetworkAccessManager->get(request);
-    }
-}
-
-void MainWindow::callbackTrackCreated(std::unique_ptr<godwit::Track> ptr)
-{
-    mTrack = std::unique_ptr<godwit::Track>(std::move(ptr));
-    updateTrack();
 }

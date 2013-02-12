@@ -3,8 +3,6 @@
 #include <list>
 #include <QDateTime>
 
-// #include "marble/MarbleWidget.h"
-
 #include "mainwindow.h"
 #include "point.h"
 #include "track.h"
