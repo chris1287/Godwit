@@ -4,6 +4,7 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <QFileInfo>
+#include <marble/GeoDataCoordinates.h>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -22,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mViewer = new MapViewer();
     mViewer->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
     setCentralWidget(mViewer);
+    centerOnLastLoadedPoint();
 }
 
 MainWindow::~MainWindow()
@@ -39,12 +41,17 @@ void MainWindow::on_actionOpen_triggered()
     if(!name.isEmpty())
     {
         using namespace godwit;
+        using namespace Marble;
 
         QFileInfo f(name);
         mSettings.setValue("gpxDirectory", f.absolutePath());
 
         mTrack = std::unique_ptr<Track>( FutureFactory<Track, const QString&>::create_sync(name) );
         mViewer->updateTrackPoints(*mTrack);
+
+        GeoDataCoordinates p = mViewer->getLastPointLoaded();
+        mSettings.setValue("lastLoadedPoint", p.toString());
+        mSettings.setValue("lastLoadedZoom", mViewer->zoom());
     }
 }
 
@@ -67,5 +74,23 @@ void MainWindow::on_actionChange_theme_triggered()
             name = name.remove(0, i);
             mViewer->setMapThemeId(name);
         }
+    }
+}
+
+void MainWindow::centerOnLastLoadedPoint()
+{
+    QString lastLoadedPoint = mSettings.value("lastLoadedPoint").toString();
+    int lastLoadedZoom = mSettings.value("lastLoadedZoom").toInt();
+
+    bool res;
+    Marble::GeoDataCoordinates p = Marble::GeoDataCoordinates::fromString(lastLoadedPoint, res);
+    if(res)
+    {
+        mViewer->centerOn(p);
+    }
+
+    if(lastLoadedZoom > 0)
+    {
+        mViewer->zoomView(lastLoadedZoom);
     }
 }

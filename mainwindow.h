@@ -23,10 +23,12 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    
+
+private:
+    void centerOnLastLoadedPoint();
+
 private slots:
     void on_actionOpen_triggered();
-
     void on_actionChange_theme_triggered();
 
 private:

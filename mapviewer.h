@@ -16,6 +16,7 @@ class MapViewer : public MarbleWidget
 public:
     virtual void customPaint(GeoPainter* painter);
     void updateTrackPoints(Track& t);
+    GeoDataCoordinates getLastPointLoaded();
 
 private:
     GeoDataLineString mTrackPoints;

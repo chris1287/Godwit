@@ -1,6 +1,6 @@
 #include "mapviewer.h"
 
-#include "marble/GeoPainter.h"
+#include <marble/GeoPainter.h>
 #include <list>
 #include <QDebug>
 
@@ -25,8 +25,14 @@ void MapViewer::updateTrackPoints(Track &t)
         mTrackPoints << p;
     }
 
-    Point i = t.getStart();
-    GeoDataCoordinates p(i.getLongitude(), i.getLatitude(), i.getAltitude(), GeoDataCoordinates::Degree);
-    centerOn(p);
+    centerOn(mTrackPoints.latLonAltBox());
+}
+
+GeoDataCoordinates MapViewer::getLastPointLoaded()
+{
+    if(mTrackPoints.size() > 0)
+        return mTrackPoints.first();
+
+    return GeoDataCoordinates();
 }
 
