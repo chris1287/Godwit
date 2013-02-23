@@ -10,7 +10,7 @@ using namespace Marble;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    mSettings("Godwit", "CrP")
+    mSettings("crp", "godwit")
 {
     ui->setupUi(this);
     mViewer = new MapViewer();
