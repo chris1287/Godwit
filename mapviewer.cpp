@@ -18,8 +18,6 @@ void MapViewer::updateTrackPoints(const QString &fileName)
     if(parseGpxFile(fileName, mTrackPoints))
     {
         centerOn(mTrackPoints.latLonAltBox());
-        qDebug() << mTrackPoints.first().longitude();
-        qDebug() << mTrackPoints.first().latitude();
     }
     else
     {
