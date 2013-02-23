@@ -1,18 +1,11 @@
 #include <QFileDialog>
-#include <QImage>
-#include <future>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 #include <QFileInfo>
 #include <marble/GeoDataCoordinates.h>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "track.h"
-#include "GeoUtils.h"
-#include "FutureFactory.h"
 
-QString MainWindow::mPath = "http://tile.openstreetmap.org/%1/%2/%3.png";
+using namespace Marble;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -40,14 +33,10 @@ void MainWindow::on_actionOpen_triggered()
     QString name = QFileDialog::getOpenFileName(this, "Open GPX File", gpxDirectory, "GPX (*.gpx)");
     if(!name.isEmpty())
     {
-        using namespace godwit;
-        using namespace Marble;
-
         QFileInfo f(name);
         mSettings.setValue("gpxDirectory", f.absolutePath());
 
-        mTrack = std::unique_ptr<Track>( FutureFactory<Track, const QString&>::create_sync(name) );
-        mViewer->updateTrackPoints(*mTrack);
+        mViewer->updateTrackPoints( name );
 
         GeoDataCoordinates p = mViewer->getLastPointLoaded();
         mSettings.setValue("lastLoadedPoint", p.toString());
@@ -83,7 +72,7 @@ void MainWindow::centerOnLastLoadedPoint()
     int lastLoadedZoom = mSettings.value("lastLoadedZoom").toInt();
 
     bool res;
-    Marble::GeoDataCoordinates p = Marble::GeoDataCoordinates::fromString(lastLoadedPoint, res);
+    GeoDataCoordinates p = GeoDataCoordinates::fromString(lastLoadedPoint, res);
     if(res)
     {
         mViewer->centerOn(p);

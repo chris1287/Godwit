@@ -2,15 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QtNetwork>
-#include <QGraphicsView>
-#include <QGraphicsScene>
-#include <QGraphicsPixmapItem>
-#include <future>
 #include <QSettings>
+#include <marble/GeoDataLineString.h>
 #include "mapviewer.h"
-
-#include "track.h"
 
 namespace Ui {
 class MainWindow;
@@ -35,7 +29,6 @@ private:
     Ui::MainWindow *ui;
     MapViewer *mViewer;
     static QString mPath;
-    std::unique_ptr<godwit::Track> mTrack;
     QSettings mSettings;
 };
 

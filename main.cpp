@@ -4,8 +4,6 @@
 #include <QDateTime>
 
 #include "mainwindow.h"
-#include "point.h"
-#include "track.h"
 
 int main(int argc, char *argv[])
 {
