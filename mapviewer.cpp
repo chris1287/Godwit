@@ -1,8 +1,8 @@
-#include "mapviewer.h"
-
-#include "marble/GeoPainter.h"
-#include <list>
+#include <marble/GeoPainter.h>
 #include <QDebug>
+
+#include "gpxParser.h"
+#include "mapviewer.h"
 
 void MapViewer::customPaint(GeoPainter* painter)
 {
@@ -13,20 +13,25 @@ void MapViewer::customPaint(GeoPainter* painter)
     painter->drawPolyline(mTrackPoints);
 }
 
-void MapViewer::updateTrackPoints(Track &t)
+void MapViewer::updateTrackPoints(const QString &fileName)
 {
-    std::list<Point> points = t.getPoints();
-
-    mTrackPoints.clear();
-
-    for(auto i : points)
+    if(parseGpxFile(fileName, mTrackPoints))
     {
-        GeoDataCoordinates p(i.getLongitude(), i.getLatitude(), i.getAltitude(), GeoDataCoordinates::Degree);
-        mTrackPoints << p;
+        centerOn(mTrackPoints.latLonAltBox());
+        qDebug() << mTrackPoints.first().longitude();
+        qDebug() << mTrackPoints.first().latitude();
     }
+    else
+    {
+        qDebug() << "Could not update track using " << fileName;
+    }
+}
 
-    Point i = t.getStart();
-    GeoDataCoordinates p(i.getLongitude(), i.getLatitude(), i.getAltitude(), GeoDataCoordinates::Degree);
-    centerOn(p);
+GeoDataCoordinates MapViewer::getLastPointLoaded()
+{
+    if(mTrackPoints.size() > 0)
+        return mTrackPoints.first();
+
+    return GeoDataCoordinates();
 }
 

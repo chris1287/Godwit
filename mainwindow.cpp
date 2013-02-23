@@ -1,27 +1,22 @@
 #include <QFileDialog>
-#include <QImage>
-#include <future>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 #include <QFileInfo>
+#include <marble/GeoDataCoordinates.h>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "track.h"
-#include "GeoUtils.h"
-#include "FutureFactory.h"
 
-QString MainWindow::mPath = "http://tile.openstreetmap.org/%1/%2/%3.png";
+using namespace Marble;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    mSettings("Godwit", "CrP")
+    mSettings("crp", "godwit")
 {
     ui->setupUi(this);
     mViewer = new MapViewer();
     mViewer->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
     setCentralWidget(mViewer);
+    centerOnLastLoadedPoint();
 }
 
 MainWindow::~MainWindow()
@@ -38,13 +33,14 @@ void MainWindow::on_actionOpen_triggered()
     QString name = QFileDialog::getOpenFileName(this, "Open GPX File", gpxDirectory, "GPX (*.gpx)");
     if(!name.isEmpty())
     {
-        using namespace godwit;
-
         QFileInfo f(name);
         mSettings.setValue("gpxDirectory", f.absolutePath());
 
-        mTrack = std::unique_ptr<Track>( FutureFactory<Track, const QString&>::create_sync(name) );
-        mViewer->updateTrackPoints(*mTrack);
+        mViewer->updateTrackPoints( name );
+
+        GeoDataCoordinates p = mViewer->getLastPointLoaded();
+        mSettings.setValue("lastLoadedPoint", p.toString());
+        mSettings.setValue("lastLoadedZoom", mViewer->zoom());
     }
 }
 
@@ -67,5 +63,23 @@ void MainWindow::on_actionChange_theme_triggered()
             name = name.remove(0, i);
             mViewer->setMapThemeId(name);
         }
+    }
+}
+
+void MainWindow::centerOnLastLoadedPoint()
+{
+    QString lastLoadedPoint = mSettings.value("lastLoadedPoint").toString();
+    int lastLoadedZoom = mSettings.value("lastLoadedZoom").toInt();
+
+    bool res;
+    GeoDataCoordinates p = GeoDataCoordinates::fromString(lastLoadedPoint, res);
+    if(res)
+    {
+        mViewer->centerOn(p);
+    }
+
+    if(lastLoadedZoom > 0)
+    {
+        mViewer->zoomView(lastLoadedZoom);
     }
 }

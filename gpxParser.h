@@ -1,51 +1,18 @@
-#include <QDebug>
-#include <QFile>
-#include <QStringList>
+#ifndef GPXPARSER_H
+#define GPXPARSER_H
+
 #include <QDomDocument>
 #include <QDomElement>
+#include <QFile>
+#include <QDateTime>
+#include <QDebug>
+#include <marble/GeoDataLineString.h>
 
-#include "track.h"
-#include "GeoUtils.h"
+#include "extendedgeodatacoordinates.h"
 
-namespace godwit
-{
+using namespace Marble;
 
-QString Track::mDateTimeFormat = "yyyy-MM-ddThh:mm:ssZ";
-
-void Track::init(std::list<Point>& points, std::string name, QDateTime timestamp)
-{
-    mPoints = points;
-    mName = name;
-    mTimestamp = timestamp;
-
-    auto delta = [](const Point& a, const Point& b)
-    {
-        return haversine(a.getLatitude(), a.getLongitude(), b.getLatitude(), b.getLongitude()) ;
-    };
-
-    mDistance = 0.0;
-
-    if(points.size() >= 2)
-    {
-        auto i = points.begin();
-        auto j = points.begin();
-        while(++j != points.end())
-        {
-            mDistance += delta(*i, *j);
-            i = j;
-        }
-    }
-}
-
-Track::Track()
-{}
-
-Track::Track(std::list<Point>& points, std::string name, QDateTime timestamp)
-{
-    init(points, name, timestamp);
-}
-
-double Track::retrieveDoubleAttribute(const QDomElement& e, const QString& attr)
+double retrieveDoubleAttribute(const QDomElement& e, const QString& attr)
 {
     double ret = 0.0;
     QString s = e.attribute(attr);
@@ -61,7 +28,7 @@ double Track::retrieveDoubleAttribute(const QDomElement& e, const QString& attr)
     return ret;
 }
 
-double Track::retrieveDoubleSingleChild(const QDomElement& e, const QString& tag)
+double retrieveDoubleSingleChild(const QDomElement& e, const QString& tag)
 {
     double ret = 0.0;
 
@@ -84,7 +51,7 @@ double Track::retrieveDoubleSingleChild(const QDomElement& e, const QString& tag
     return ret;
 }
 
-QDateTime Track::retrieveQDateTimeSingleChild(const QDomElement& e, const QString& tag)
+QDateTime retrieveQDateTimeSingleChild(const QDomElement& e, const QString& tag, const QString& dateTimeFormat)
 {
     QDateTime ret;
 
@@ -95,7 +62,7 @@ QDateTime Track::retrieveQDateTimeSingleChild(const QDomElement& e, const QStrin
         if(!tmp.isNull())
         {
             QString s = tmp.text();
-            ret = QDateTime::fromString(s, mDateTimeFormat);
+            ret = QDateTime::fromString(s, dateTimeFormat);
             if(ret.isNull() || !ret.isValid())
             {
                 qDebug() << "Conversion to QDateTime failed";
@@ -106,22 +73,22 @@ QDateTime Track::retrieveQDateTimeSingleChild(const QDomElement& e, const QStrin
     return ret;
 }
 
-Track::Track(const QString& fileName)
+bool parseGpxFile(const QString& fileName, GeoDataLineString& track, const QString& dateTimeFormat = "yyyy-MM-ddThh:mm:ssZ")
 {
     QFile file(fileName);
     if(!file.open(QIODevice::ReadOnly))
     {
-        throw (Track_creation_exception());
+        qDebug() << "Could not open " << fileName;
+        return false;
     }
 
     QDomDocument doc("gpx");
     if(!doc.setContent(&file))
     {
         file.close();
-        throw (Track_creation_exception());
+        qDebug() << "Could not parse " << fileName;
+        return false;
     }
-
-    std::list<Point> l;
 
     QDomElement root = doc.documentElement();
     QDomNodeList trkpts = root.elementsByTagName("trkpt");
@@ -130,20 +97,20 @@ Track::Track(const QString& fileName)
         QDomElement e = trkpts.at(i).toElement();
         if(!e.isNull())
         {
-            double lat = retrieveDoubleAttribute(e, "lat");
             double lon = retrieveDoubleAttribute(e, "lon");
+            double lat = retrieveDoubleAttribute(e, "lat");
             double ele = retrieveDoubleSingleChild(e, "ele");
             // TODO int hearRate =
-            QDateTime timestamp = retrieveQDateTimeSingleChild(e, "time");
+            QDateTime timestamp = retrieveQDateTimeSingleChild(e, "time", dateTimeFormat);
 
-            Point p(lat, lon, ele, 0, timestamp);
-            l.push_back(p);
+            ExtendedGeoDataCoordinates p(lon, lat, ele, GeoDataCoordinates::Degree, 0, timestamp);
+            track << p;
         }
     }
 
     file.close();
 
-    init(l, "", QDateTime::currentDateTime());
+    return true;
 }
 
-}
+#endif // GPXPARSER_H
