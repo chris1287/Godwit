@@ -4,7 +4,9 @@
 #include <QMainWindow>
 #include <QSettings>
 #include <marble/GeoDataLineString.h>
+
 #include "mapviewer.h"
+#include "tracklayer.h"
 
 namespace Ui {
 class MainWindow;
@@ -28,6 +30,8 @@ private slots:
 private:
     Ui::MainWindow *ui;
     MapViewer *mViewer;
+    TrackLayer *mTrackLayer;
+
     static QString mPath;
     QSettings mSettings;
 };

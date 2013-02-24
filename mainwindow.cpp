@@ -13,9 +13,14 @@ MainWindow::MainWindow(QWidget *parent) :
     mSettings("crp", "godwit")
 {
     ui->setupUi(this);
+
     mViewer = new MapViewer();
     mViewer->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
     setCentralWidget(mViewer);
+
+    mTrackLayer = new TrackLayer(mViewer);
+    mViewer->addLayer(mTrackLayer);
+
     centerOnLastLoadedPoint();
 }
 
@@ -36,9 +41,9 @@ void MainWindow::on_actionOpen_triggered()
         QFileInfo f(name);
         mSettings.setValue("gpxDirectory", f.absolutePath());
 
-        mViewer->updateTrackPoints( name );
+        mTrackLayer->updateTrackPoints( name );
 
-        GeoDataCoordinates p = mViewer->getLastPointLoaded();
+        GeoDataCoordinates p = mTrackLayer->getLastPointLoaded();
         mSettings.setValue("lastLoadedPoint", p.toString());
         mSettings.setValue("lastLoadedZoom", mViewer->zoom());
     }
