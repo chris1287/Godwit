@@ -1,7 +1,4 @@
 #include <QApplication>
-#include <iostream>
-#include <list>
-#include <QDateTime>
 
 #include "mainwindow.h"
 
