@@ -30,7 +30,6 @@ private slots:
 private:
     Ui::MainWindow *ui;
     MapViewer *mViewer;
-    TrackLayer *mTrackLayer;
 
     static QString mPath;
     QSettings mSettings;

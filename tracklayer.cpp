@@ -4,8 +4,8 @@
 #include "tracklayer.h"
 #include "gpxParser.h"
 
-TrackLayer::TrackLayer(MarbleWidget *parent)
-    : mParent(parent)
+TrackLayer::TrackLayer(MarbleWidget *parent, const QColor &color)
+    : mParent(parent), mColor(color)
 {
 }
 
@@ -28,7 +28,7 @@ QStringList TrackLayer::renderPosition() const
 
 bool TrackLayer::render(GeoPainter *painter, ViewportParams *viewport, const QString &renderPos, GeoSceneLayer *layer)
 {
-    QPen pen(Qt::green);
+    QPen pen(mColor);
     pen.setWidth(4);
 
     painter->setPen(pen);

@@ -12,7 +12,7 @@ using namespace Marble;
 class TrackLayer : public LayerInterface
 {
 public:
-    TrackLayer(MarbleWidget *parent);
+    TrackLayer(MarbleWidget *parent, const QColor& color = Qt::green);
 
 public:
     // Inherited from LayerInterface
@@ -26,6 +26,7 @@ public:
 private:
     MarbleWidget *mParent;
     GeoDataLineString mTrackPoints;
+    QColor mColor;
 };
 
 #endif // TRACKLAYER_H

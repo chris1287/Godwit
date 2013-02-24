@@ -4,6 +4,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "colorFactory.h"
 
 using namespace Marble;
 
@@ -17,9 +18,6 @@ MainWindow::MainWindow(QWidget *parent) :
     mViewer = new MapViewer();
     mViewer->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
     setCentralWidget(mViewer);
-
-    mTrackLayer = new TrackLayer(mViewer);
-    mViewer->addLayer(mTrackLayer);
 
     centerOnLastLoadedPoint();
 }
@@ -41,9 +39,12 @@ void MainWindow::on_actionOpen_triggered()
         QFileInfo f(name);
         mSettings.setValue("gpxDirectory", f.absolutePath());
 
-        mTrackLayer->updateTrackPoints( name );
+        TrackLayer* track = new TrackLayer(mViewer, getNextColor());
+        track->updateTrackPoints( name );
 
-        GeoDataCoordinates p = mTrackLayer->getLastPointLoaded();
+        mViewer->addLayer(track);
+
+        GeoDataCoordinates p = track->getLastPointLoaded();
         mSettings.setValue("lastLoadedPoint", p.toString());
         mSettings.setValue("lastLoadedZoom", mViewer->zoom());
     }
